@@ -1,3 +1,6 @@
-export default function Container() {
-  return <div className="container"></div>;
+type ContainerProps = {
+  children: React.ReactNode;
+};
+export default function Container({ children }: ContainerProps) {
+  return <div className="container">{children}</div>;
 }
