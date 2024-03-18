@@ -6,3 +6,14 @@ export type JobItem = {
   relevanceScore: number;
   title: string;
 };
+
+export type JobDetails = {
+  description: string;
+  qualifications: string[];
+  reviews: string[];
+  duration: string;
+  location: string;
+  coverImgURL: string;
+  companyURL: string;
+  salary: string;
+} & JobItem;
