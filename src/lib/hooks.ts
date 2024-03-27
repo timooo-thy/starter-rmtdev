@@ -1,34 +1,35 @@
 import { useEffect, useState } from "react";
 import { JobDetails, JobItem } from "./types";
 import { useQuery } from "@tanstack/react-query";
+import { handleError } from "./utils";
+
+const fetchJobItems = async (searchText: string): Promise<JobItem[]> => {
+  const response = await fetch(
+    `https://bytegrad.com/course-assets/projects/rmtdev/api/data?search=${searchText}`
+  );
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.description);
+  }
+  const data = await response.json();
+  return data.jobItems;
+};
 
 export function useJobItems(searchText: string) {
-  const [jobItems, setJobItems] = useState<JobItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  const jobItemsSliced = jobItems.slice(0, 7);
-  const resultCount = jobItems.length;
-
-  useEffect(() => {
-    if (!searchText) return;
-    setLoading(true);
-    const fetchAllJobItems = async () => {
-      try {
-        const response = await fetch(
-          `https://bytegrad.com/course-assets/projects/rmtdev/api/data?search=${searchText}`
-        );
-        const data = await response.json();
-        setJobItems(data.jobItems);
-      } catch (error) {
-        console.error("Error fetching job items", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAllJobItems();
-  }, [searchText]);
-
-  return { jobItems: jobItemsSliced, loading, resultCount };
+  const { data, isInitialLoading } = useQuery(
+    ["jobItems", searchText],
+    () => {
+      return fetchJobItems(searchText);
+    },
+    {
+      staleTime: 1000 * 60 * 30,
+      refetchOnWindowFocus: false,
+      retry: false,
+      enabled: !!searchText,
+      onError: handleError,
+    }
+  );
+  return { jobItems: data, loading: isInitialLoading };
 }
 
 export function useActiveId() {
@@ -78,9 +79,7 @@ export function useJobDetails() {
       refetchOnWindowFocus: false,
       retry: false,
       enabled: !!activeId,
-      onError: (error) => {
-        console.error("Error", error);
-      },
+      onError: handleError,
     }
   );
   return { jobDetails: data, isLoading };
@@ -127,3 +126,30 @@ export function useDebouncer<T>(value: T, delay = 500): T {
 // }, [activeId]);
 
 // return { jobDetails, isLoading };
+
+// export function useJobItems(searchText: string) {
+//   const [jobItems, setJobItems] = useState<JobItem[]>([]);
+//   const [loading, setLoading] = useState(false);
+
+//   useEffect(() => {
+//     if (!searchText) return;
+//     setLoading(true);
+//     const fetchAllJobItems = async () => {
+//       try {
+//         const response = await fetch(
+//           `https://bytegrad.com/course-assets/projects/rmtdev/api/data?search=${searchText}`
+//         );
+//         const data = await response.json();
+//         setJobItems(data.jobItems);
+//       } catch (error) {
+//         console.error("Error fetching job items", error);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchAllJobItems();
+//   }, [searchText]);
+
+//   return { jobItems, loading };
+// }

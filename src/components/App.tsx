@@ -13,14 +13,19 @@ import ResultsCount from "./ResultsCount";
 import JobList from "./JobList";
 import Pagination from "./PaginationControls";
 import { useDebouncer, useJobItems } from "../lib/hooks";
+import { Toaster } from "sonner";
 
 function App() {
   const [searchText, setSearchText] = useState("");
   const debounceSearchText = useDebouncer(searchText, 300);
-  const { jobItems, loading, resultCount } = useJobItems(debounceSearchText);
+  const { jobItems, loading } = useJobItems(debounceSearchText);
+
+  const jobItemsSliced = jobItems?.slice(0, 7) || [];
+  const resultCount = jobItems?.length || 0;
 
   return (
     <>
+      <Toaster richColors />
       <Background />
       <Header>
         <HeaderTop>
@@ -35,7 +40,7 @@ function App() {
             <ResultsCount resultCount={resultCount} />
             <Sorting />
           </SidebarTop>
-          <JobList jobItems={jobItems} loading={loading} />
+          <JobList jobItems={jobItemsSliced} loading={loading} />
           <Pagination />
         </Sidebar>
         <JobItemContent />
