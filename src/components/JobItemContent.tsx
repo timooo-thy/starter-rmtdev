@@ -4,12 +4,13 @@ import Spinner from "./Spinner";
 
 export default function JobItemContent() {
   const { jobDetails, isLoading } = useJobDetails();
-  const { activeId } = useActiveId();
+  const activeId = useActiveId();
 
   return (
     <>
-      {activeId === null && <EmptyJobContent />}
-      {isLoading ? (
+      {activeId === null ? (
+        <EmptyJobContent />
+      ) : isLoading ? (
         <section className="job-details">
           <div>
             <Spinner />
