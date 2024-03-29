@@ -17,3 +17,5 @@ export type JobDetails = {
   companyURL: string;
   salary: string;
 } & JobItem;
+
+export type SortBy = "recent" | "relevant";

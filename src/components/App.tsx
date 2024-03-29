@@ -14,14 +14,37 @@ import JobList from "./JobList";
 import Pagination from "./PaginationControls";
 import { useDebouncer, useJobItems } from "../lib/hooks";
 import { Toaster } from "sonner";
+import { SortBy } from "../lib/types";
+
+const PAGE_LENGTH = 7;
 
 function App() {
   const [searchText, setSearchText] = useState("");
   const debounceSearchText = useDebouncer(searchText, 300);
   const { jobItems, loading } = useJobItems(debounceSearchText);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState<SortBy>("relevant");
 
-  const jobItemsSliced = jobItems?.slice(0, 7) || [];
+  const maxPage =
+    (jobItems?.length && Math.ceil(jobItems.length / PAGE_LENGTH)) || 1;
+  const jobItemsSorted = jobItems?.sort((a, b) => {
+    if (sortBy === "recent") {
+      return a.daysAgo - b.daysAgo;
+    } else {
+      return a.relevanceScore - b.relevanceScore;
+    }
+  });
+  const jobItemsSortedAndSliced =
+    jobItemsSorted?.slice(
+      (currentPage - 1) * PAGE_LENGTH,
+      PAGE_LENGTH * currentPage
+    ) || [];
   const resultCount = jobItems?.length || 0;
+
+  const handleSort = (sortBy: SortBy) => {
+    setSortBy(sortBy);
+    setCurrentPage(1);
+  };
 
   return (
     <>
@@ -38,10 +61,14 @@ function App() {
         <Sidebar>
           <SidebarTop>
             <ResultsCount resultCount={resultCount} />
-            <Sorting />
+            <Sorting handleSort={handleSort} sortBy={sortBy} />
           </SidebarTop>
-          <JobList jobItems={jobItemsSliced} loading={loading} />
-          <Pagination />
+          <JobList jobItems={jobItemsSortedAndSliced} loading={loading} />
+          <Pagination
+            currentPage={currentPage}
+            maxPage={maxPage}
+            setCurrentPage={setCurrentPage}
+          />
         </Sidebar>
         <JobItemContent />
       </Container>
