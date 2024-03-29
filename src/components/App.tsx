@@ -23,11 +23,11 @@ function App() {
   const debounceSearchText = useDebouncer(searchText, 300);
   const { jobItems, loading } = useJobItems(debounceSearchText);
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortBy, setSortBy] = useState<SortBy>("relevant");
+  const [sortBy, setSortBy] = useState<SortBy>("relevance");
 
   const maxPage =
     (jobItems?.length && Math.ceil(jobItems.length / PAGE_LENGTH)) || 1;
-  const jobItemsSorted = jobItems?.sort((a, b) => {
+  const jobItemsSorted = [...(jobItems || [])]?.sort((a, b) => {
     if (sortBy === "recent") {
       return a.daysAgo - b.daysAgo;
     } else {
