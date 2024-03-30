@@ -3,8 +3,8 @@ import { useActiveId, useJobDetails } from "../lib/hooks";
 import Spinner from "./Spinner";
 
 export default function JobItemContent() {
-  const { jobDetails, isLoading } = useJobDetails();
   const activeId = useActiveId();
+  const { jobDetails, isLoading } = useJobDetails(activeId);
 
   return (
     <>

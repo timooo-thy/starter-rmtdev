@@ -12,7 +12,7 @@ import Sorting from "./SortingControls";
 import ResultsCount from "./ResultsCount";
 import JobList from "./JobList";
 import Pagination from "./PaginationControls";
-import { useDebouncer, useJobItems } from "../lib/hooks";
+import { useDebouncer, useSearchQuery } from "../lib/hooks";
 import { Toaster } from "sonner";
 import { SortBy } from "../lib/types";
 import BookmarksContextProvider from "./BookmarksContextProvider";
@@ -22,7 +22,7 @@ const PAGE_LENGTH = 7;
 function App() {
   const [searchText, setSearchText] = useState("");
   const debounceSearchText = useDebouncer(searchText, 300);
-  const { jobItems, loading } = useJobItems(debounceSearchText);
+  const { jobItems, loading } = useSearchQuery(debounceSearchText);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState<SortBy>("relevance");
 
@@ -74,7 +74,6 @@ function App() {
           <JobItemContent />
         </Container>
       </BookmarksContextProvider>
-
       <Footer />
     </>
   );

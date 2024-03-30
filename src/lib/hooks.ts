@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { JobDetails, JobItem } from "./types";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { handleError } from "./utils";
 import { BookmarksContext } from "../components/BookmarksContextProvider";
 
@@ -16,7 +16,7 @@ const fetchJobItems = async (searchText: string): Promise<JobItem[]> => {
   return data.jobItems;
 };
 
-export function useJobItems(searchText: string) {
+export function useSearchQuery(searchText: string) {
   const { data, isInitialLoading } = useQuery(
     ["jobItems", searchText],
     () => {
@@ -68,8 +68,7 @@ const fetchJobDetails = async (id: number): Promise<JobDetails> => {
   return data.jobItem;
 };
 
-export function useJobDetails() {
-  const activeId = useActiveId();
+export function useJobDetails(activeId: number | null) {
   const { data, isLoading } = useQuery(
     ["jobDetails", activeId],
     () => {
@@ -118,10 +117,31 @@ export function useLocalStorage<T>(
     JSON.parse(localStorage.getItem(item) || JSON.stringify(initialValue))
   );
   useEffect(() => {
-    localStorage.setItem(item, JSON.stringify(item));
-  }, [item]);
+    localStorage.setItem(item, JSON.stringify(value));
+  }, [item, value]);
 
   return { value, setValue } as const;
+}
+
+export function useJobItems(ids: number[]) {
+  const result = useQueries({
+    queries: ids.map((id) => {
+      return {
+        queryKey: ["jobItem", id],
+        queryFn: () => fetchJobDetails(id),
+        staleTime: 1000 * 60 * 30,
+        refetchOnWindowFocus: false,
+        retry: false,
+        onError: handleError,
+      };
+    }),
+  });
+  const bookmarkedJobItems = result
+    .map((query) => query.data)
+    .filter((jobItem) => jobItem !== undefined);
+  const isLoading = result.some((query) => query.isLoading);
+
+  return { bookmarkedJobItems, isLoading };
 }
 // export function useJobDetails() {
 // const [jobDetails, setJobDetails] = useState<JobDetails | null>(null);
