@@ -15,6 +15,7 @@ import Pagination from "./PaginationControls";
 import { useDebouncer, useJobItems } from "../lib/hooks";
 import { Toaster } from "sonner";
 import { SortBy } from "../lib/types";
+import BookmarksContextProvider from "./BookmarksContextProvider";
 
 const PAGE_LENGTH = 7;
 
@@ -40,7 +41,6 @@ function App() {
       PAGE_LENGTH * currentPage
     ) || [];
   const resultCount = jobItems?.length || 0;
-
   const handleSort = (sortBy: SortBy) => {
     setSortBy(sortBy);
     setCurrentPage(1);
@@ -50,28 +50,31 @@ function App() {
     <>
       <Toaster richColors />
       <Background />
-      <Header>
-        <HeaderTop>
-          <Logo />
-          <BookmarksButton />
-        </HeaderTop>
-        <SearchForm searchText={searchText} setSearchText={setSearchText} />
-      </Header>
-      <Container>
-        <Sidebar>
-          <SidebarTop>
-            <ResultsCount resultCount={resultCount} />
-            <Sorting handleSort={handleSort} sortBy={sortBy} />
-          </SidebarTop>
-          <JobList jobItems={jobItemsSortedAndSliced} loading={loading} />
-          <Pagination
-            currentPage={currentPage}
-            maxPage={maxPage}
-            setCurrentPage={setCurrentPage}
-          />
-        </Sidebar>
-        <JobItemContent />
-      </Container>
+      <BookmarksContextProvider>
+        <Header>
+          <HeaderTop>
+            <Logo />
+            <BookmarksButton />
+          </HeaderTop>
+          <SearchForm searchText={searchText} setSearchText={setSearchText} />
+        </Header>
+        <Container>
+          <Sidebar>
+            <SidebarTop>
+              <ResultsCount resultCount={resultCount} />
+              <Sorting handleSort={handleSort} sortBy={sortBy} />
+            </SidebarTop>
+            <JobList jobItems={jobItemsSortedAndSliced} loading={loading} />
+            <Pagination
+              currentPage={currentPage}
+              maxPage={maxPage}
+              setCurrentPage={setCurrentPage}
+            />
+          </Sidebar>
+          <JobItemContent />
+        </Container>
+      </BookmarksContextProvider>
+
       <Footer />
     </>
   );
