@@ -2,8 +2,9 @@ import { useContext, useEffect, useState } from "react";
 import { JobDetails, JobItem } from "./types";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { handleError } from "./utils";
-import { BookmarksContext } from "../components/BookmarksContextProvider";
-import { ActiveIdContext } from "../components/ActiveIdContextProvider";
+import { BookmarksContext } from "../contexts/BookmarksContextProvider";
+import { ActiveIdContext } from "../contexts/ActiveIdContextProvider";
+import { SearchTextContext } from "../contexts/SearchTextContextProvider";
 
 /* API Calls */
 const fetchJobItems = async (searchText: string): Promise<JobItem[]> => {
@@ -155,6 +156,16 @@ export function useActiveIdContext() {
   if (!context) {
     throw new Error(
       "ActiveIdContext must be used within a ActiveIdContextProvider"
+    );
+  }
+  return context;
+}
+
+export function useSearchTextContext() {
+  const context = useContext(SearchTextContext);
+  if (!context) {
+    throw new Error(
+      "SearchTextContext must be used within a SearchTextContextProvider"
     );
   }
   return context;

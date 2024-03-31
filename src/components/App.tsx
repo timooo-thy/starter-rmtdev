@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Background from "./Background";
 import Container from "./Container";
 import Footer from "./Footer";
@@ -12,34 +12,45 @@ import Sorting from "./SortingControls";
 import ResultsCount from "./ResultsCount";
 import JobList from "./JobList";
 import Pagination from "./PaginationControls";
-import { useDebouncer, useSearchQuery } from "../lib/hooks";
+import { useSearchQuery, useSearchTextContext } from "../lib/hooks";
 import { Toaster } from "sonner";
 import { SortBy } from "../lib/types";
 
 const PAGE_LENGTH = 7;
 
 function App() {
-  const [searchText, setSearchText] = useState("");
-  const debounceSearchText = useDebouncer(searchText, 300);
+  /* Use States */
+  const { searchText, setSearchText, debounceSearchText } =
+    useSearchTextContext();
   const { jobItems, loading } = useSearchQuery(debounceSearchText);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState<SortBy>("relevance");
 
+  /* Computed States */
   const maxPage =
     (jobItems?.length && Math.ceil(jobItems.length / PAGE_LENGTH)) || 1;
-  const jobItemsSorted = [...(jobItems || [])]?.sort((a, b) => {
-    if (sortBy === "recent") {
-      return a.daysAgo - b.daysAgo;
-    } else {
-      return a.relevanceScore - b.relevanceScore;
-    }
-  });
-  const jobItemsSortedAndSliced =
-    jobItemsSorted?.slice(
-      (currentPage - 1) * PAGE_LENGTH,
-      PAGE_LENGTH * currentPage
-    ) || [];
   const resultCount = jobItems?.length || 0;
+
+  const jobItemsSorted = useMemo(() => {
+    return [...(jobItems || [])]?.sort((a, b) => {
+      if (sortBy === "recent") {
+        return a.daysAgo - b.daysAgo;
+      } else {
+        return a.relevanceScore - b.relevanceScore;
+      }
+    });
+  }, [jobItems, sortBy]);
+
+  const jobItemsSortedAndSliced = useMemo(() => {
+    return (
+      jobItemsSorted?.slice(
+        (currentPage - 1) * PAGE_LENGTH,
+        PAGE_LENGTH * currentPage
+      ) || []
+    );
+  }, [currentPage, jobItemsSorted]);
+
+  /* Event handlers */
   const handleSort = (sortBy: SortBy) => {
     setSortBy(sortBy);
     setCurrentPage(1);
