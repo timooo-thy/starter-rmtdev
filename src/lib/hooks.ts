@@ -3,7 +3,9 @@ import { JobDetails, JobItem } from "./types";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { handleError } from "./utils";
 import { BookmarksContext } from "../components/BookmarksContextProvider";
+import { ActiveIdContext } from "../components/ActiveIdContextProvider";
 
+/* API Calls */
 const fetchJobItems = async (searchText: string): Promise<JobItem[]> => {
   const response = await fetch(
     `https://bytegrad.com/course-assets/projects/rmtdev/api/data?search=${searchText}`
@@ -16,6 +18,20 @@ const fetchJobItems = async (searchText: string): Promise<JobItem[]> => {
   return data.jobItems;
 };
 
+const fetchJobDetails = async (id: number): Promise<JobDetails> => {
+  const response = await fetch(
+    `https://bytegrad.com/course-assets/projects/rmtdev/api/data/${id}`
+  );
+  // 404 error etc
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.description);
+  }
+  const data = await response.json();
+  return data.jobItem;
+};
+
+/* React Query */
 export function useSearchQuery(searchText: string) {
   const { data, isInitialLoading } = useQuery(
     ["jobItems", searchText],
@@ -33,41 +49,6 @@ export function useSearchQuery(searchText: string) {
   return { jobItems: data, loading: isInitialLoading };
 }
 
-export function useActiveId() {
-  const [activeId, setActiveId] = useState<number | null>(null);
-
-  useEffect(() => {
-    const handleHashChange = () => {
-      const id = +window.location.hash.substring(1);
-      if (id === 0) return;
-      setActiveId(id);
-    };
-
-    handleHashChange();
-
-    window.addEventListener("hashchange", handleHashChange);
-
-    return () => {
-      window.removeEventListener("hashchange", handleHashChange);
-    };
-  }, []);
-
-  return activeId;
-}
-
-const fetchJobDetails = async (id: number): Promise<JobDetails> => {
-  const response = await fetch(
-    `https://bytegrad.com/course-assets/projects/rmtdev/api/data/${id}`
-  );
-  // 404 error etc
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.description);
-  }
-  const data = await response.json();
-  return data.jobItem;
-};
-
 export function useJobDetails(activeId: number | null) {
   const { data, isLoading } = useQuery(
     ["jobDetails", activeId],
@@ -83,44 +64,6 @@ export function useJobDetails(activeId: number | null) {
     }
   );
   return { jobDetails: data, isLoading };
-}
-
-export function useDebouncer<T>(value: T, delay = 500): T {
-  const [debounceValue, setDebounceValue] = useState(value);
-
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setDebounceValue(value);
-    }, delay);
-
-    return () => clearTimeout(timeoutId);
-  }, [value, delay]);
-
-  return debounceValue;
-}
-
-export function useBookmarksContext() {
-  const context = useContext(BookmarksContext);
-  if (!context) {
-    throw new Error(
-      "useBookmarksContext must be used within a BookmarksContextProvider"
-    );
-  }
-  return context;
-}
-
-export function useLocalStorage<T>(
-  item: string,
-  initialValue: T
-): { value: T; setValue: React.Dispatch<React.SetStateAction<T>> } {
-  const [value, setValue] = useState(() =>
-    JSON.parse(localStorage.getItem(item) || JSON.stringify(initialValue))
-  );
-  useEffect(() => {
-    localStorage.setItem(item, JSON.stringify(value));
-  }, [item, value]);
-
-  return { value, setValue } as const;
 }
 
 export function useJobItems(ids: number[]) {
@@ -142,6 +85,35 @@ export function useJobItems(ids: number[]) {
   const isLoading = result.some((query) => query.isLoading);
 
   return { bookmarkedJobItems, isLoading };
+}
+
+/* Custom Hooks */
+export function useDebouncer<T>(value: T, delay = 500): T {
+  const [debounceValue, setDebounceValue] = useState(value);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setDebounceValue(value);
+    }, delay);
+
+    return () => clearTimeout(timeoutId);
+  }, [value, delay]);
+
+  return debounceValue;
+}
+
+export function useLocalStorage<T>(
+  item: string,
+  initialValue: T
+): { value: T; setValue: React.Dispatch<React.SetStateAction<T>> } {
+  const [value, setValue] = useState(() =>
+    JSON.parse(localStorage.getItem(item) || JSON.stringify(initialValue))
+  );
+  useEffect(() => {
+    localStorage.setItem(item, JSON.stringify(value));
+  }, [item, value]);
+
+  return { value, setValue } as const;
 }
 
 type useOnClickOutsideType = (
@@ -166,6 +138,28 @@ export const useOnClickOutside: useOnClickOutsideType = (refs, handler) => {
     };
   }, [refs, handler]);
 };
+
+/* useContext */
+export function useBookmarksContext() {
+  const context = useContext(BookmarksContext);
+  if (!context) {
+    throw new Error(
+      "useBookmarksContext must be used within a BookmarksContextProvider"
+    );
+  }
+  return context;
+}
+
+export function useActiveIdContext() {
+  const context = useContext(ActiveIdContext);
+  if (!context) {
+    throw new Error(
+      "ActiveIdContext must be used within a ActiveIdContextProvider"
+    );
+  }
+  return context;
+}
+
 // export function useJobDetails() {
 // const [jobDetails, setJobDetails] = useState<JobDetails | null>(null);
 // const [isLoading, setIsLoading] = useState(false);
