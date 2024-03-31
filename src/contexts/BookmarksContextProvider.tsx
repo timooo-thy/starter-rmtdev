@@ -1,4 +1,4 @@
-import { createContext } from "react";
+import { createContext, useCallback, useMemo } from "react";
 import { useLocalStorage, useJobItems } from "../lib/hooks";
 import { JobItem } from "../lib/types";
 
@@ -23,26 +23,33 @@ export default function BookmarksContextProvider({
   const { value: bookmarkIds, setValue: setBookmarkIds } = useLocalStorage<
     number[]
   >("bookmarkIds", []);
-  console.log(bookmarkIds, "hello");
+
   const { bookmarkedJobItems, isLoading } = useJobItems(bookmarkIds);
 
-  const handleToggleBookmark = (id: number) => {
-    if (bookmarkIds.includes(id)) {
-      setBookmarkIds((prev) => prev.filter((bookmarkId) => bookmarkId !== id));
-    } else {
-      setBookmarkIds((prev) => [...prev, id]);
-    }
-  };
+  const handleToggleBookmark = useCallback(
+    (id: number) => {
+      if (bookmarkIds.includes(id)) {
+        setBookmarkIds((prev) =>
+          prev.filter((bookmarkId) => bookmarkId !== id)
+        );
+      } else {
+        setBookmarkIds((prev) => [...prev, id]);
+      }
+    },
+    [bookmarkIds, setBookmarkIds]
+  );
+
+  const contextValues = useMemo(() => {
+    return {
+      bookmarkIds,
+      handleToggleBookmark,
+      bookmarkedJobItems,
+      isLoading,
+    };
+  }, [bookmarkIds, handleToggleBookmark, bookmarkedJobItems, isLoading]);
 
   return (
-    <BookmarksContext.Provider
-      value={{
-        bookmarkIds,
-        handleToggleBookmark,
-        bookmarkedJobItems,
-        isLoading,
-      }}
-    >
+    <BookmarksContext.Provider value={contextValues}>
       {children}
     </BookmarksContext.Provider>
   );

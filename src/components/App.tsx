@@ -31,6 +31,7 @@ function App() {
     (jobItems?.length && Math.ceil(jobItems.length / PAGE_LENGTH)) || 1;
   const resultCount = jobItems?.length || 0;
 
+  // Create new array of job items sorted by either relevance or recent if not useMemo wil not work properly
   const jobItemsSorted = useMemo(() => {
     return [...(jobItems || [])]?.sort((a, b) => {
       if (sortBy === "recent") {
